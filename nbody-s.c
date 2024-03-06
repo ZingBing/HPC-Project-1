@@ -42,6 +42,23 @@
 // Softening factor to reduce divide-by-near-zero effects
 #define SOFTENING 1e-9
 
+/** This function calculates the strength of the gravitational force 𝐹𝑖𝑗 
+between two bodies 𝑖 and 𝑗*/
+int calculate_force(double* force, double* r, double* mass) {
+    double dist = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
+    double mag = G * mass[0] * mass[1] / (dist*dist + SOFTENING*SOFTENING);
+    force[0] = -mag * r[0] / dist;
+    force[1] = -mag * r[1] / dist;
+    force[2] = -mag * r[2] / dist;
+    return 0;
+}
+
+int super_position (double* force, double* mass, double* position, double* velocity, double time_step) {
+
+}
+
+// function for newtons second law too
+
 
 int main(int argc, const char* argv[]) {
     // parse arguments
@@ -73,37 +90,7 @@ int main(int argc, const char* argv[]) {
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    // This all came from copilot, run it before we trust it next time
-    Matrix* output = matrix_copy(input);
-    // compute for all time steps
-    for (size_t step = 0; step < num_steps; step++) {
-        // compute the force on each body
-        for (size_t i = 0; i < n; i++) {
-            double force[3] = {0, 0, 0};
-            for (size_t j = 0; j < n; j++) {
-                if (i == j) { continue; }
-                double r[3] = {
-                    output->data[i*7+1] - output->data[j*7+1],
-                    output->data[i*7+2] - output->data[j*7+2],
-                    output->data[i*7+3] - output->data[j*7+3]
-                };
-                double dist = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
-                double mag = G * output->data[i*7] * output->data[j*7] / (dist*dist + SOFTENING*SOFTENING);
-                force[0] -= mag * r[0] / dist;
-                force[1] -= mag * r[1] / dist;
-                force[2] -= mag * r[2] / dist;
-            }
-            output->data[i*7+4] += force[0] / output->data[i*7];
-            output->data[i*7+5] += force[1] / output->data[i*7];
-            output->data[i*7+6] += force[2] / output->data[i*7];
-        }
-        // update the position of each body
-        for (size_t i = 0; i < n; i++) {
-            output->data[i*7+1] += time_step * output->data[i*7+4];
-            output->data[i*7+2] += time_step * output->data[i*7+5];
-            output->data[i*7+3] += time_step * output->data[i*7+6];
-        }
-    }
+    // here's where we'll be writing code, copilot did a bad
 
     // get the end and computation time
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -111,7 +98,7 @@ int main(int argc, const char* argv[]) {
     printf("%f secs\n", time);
 
     // save results
-    //matrix_to_npy_path(argv[5], output);
+    matrix_to_npy_path(argv[5], output);
 
     // cleanup
 
