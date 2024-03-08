@@ -91,6 +91,10 @@ int main(int argc, const char* argv[]) {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // here's where we'll be writing code, copilot did a bad
+    // allocate the output matrix (maybe) or we could still copy the input matrix
+    Matrix* output = matrix_new(num_outputs*n, 3);
+    if (output == NULL) { perror("error allocating output"); return 1; }
+    
 
     // get the end and computation time
     clock_gettime(CLOCK_MONOTONIC, &end);
