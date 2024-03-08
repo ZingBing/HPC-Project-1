@@ -34,3 +34,6 @@ double gravitation(double mass_body_1, double mass_body_2, double* body_1_positi
     printf("G * (top / bottom * bottom): %f\n", G * (top / (bottom * bottom)));
     return G * (top / (bottom * bottom));
 }
+
+double net_force() {}
+
