@@ -70,6 +70,12 @@ int main(int argc, const char* argv[]) {
     //   input        n-by-7 Matrix of input data
     //   n            number of bodies to simulate
 
+    //print input matrix to know initial body positions
+    printf("Initial Body Positions:\n");
+    for (size_t i = 0; i < n; i++) {
+        printf("Body %zu: %f, %f, %f\n", i, input->data[i*input->cols + 1], input->data[i*input->cols + 2], input->data[i*input->cols + 3]);
+    }
+
     // start the clock
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -80,11 +86,11 @@ int main(int argc, const char* argv[]) {
     if (output == NULL) { perror("error allocating output"); return 1; }
     
     // Save positions to row `0` of output
-    size_t irows = input->rows;
+    size_t icols = input->cols;
     for (size_t i = 0; i < n; i++) {
-        output->data[3*i] = input->data[i*irows + 1];
-        output->data[3*i+1] = input->data[i*irows + 2];
-        output->data[3*i+2] = input->data[i*irows + 3];
+        output->data[3*i] = input->data[i*icols + 1];
+        output->data[3*i+1] = input->data[i*icols + 2];
+        output->data[3*i+2] = input->data[i*icols + 3];
     }
     
     // Create variables for position and velocity of each body
@@ -93,13 +99,17 @@ int main(int argc, const char* argv[]) {
     double* force = malloc(3 * n * sizeof(double));
     double* mass = malloc(n * sizeof(double));
     for (size_t i = 0; i < n; i++) {
-        mass[i] = input->data[i*irows];
-        position[3*i] = input->data[i*irows + 1];
-        position[3*i+1] = input->data[i*irows + 2];
-        position[3*i+2] = input->data[i*irows + 3];
-        velocity[3*i] = input->data[i*irows + 4];
-        velocity[3*i+1] = input->data[i*irows + 5];
-        velocity[3*i+2] = input->data[i*irows + 6];
+        mass[i] = input->data[i*icols];
+        position[3*i] = input->data[i*icols + 1];
+        position[3*i+1] = input->data[i*icols + 2];
+        position[3*i+2] = input->data[i*icols + 3];
+        velocity[3*i] = input->data[i*icols + 4];
+        velocity[3*i+1] = input->data[i*icols + 5];
+        velocity[3*i+2] = input->data[i*icols + 6];
+    }
+    // print the initial positions of the bodies to see if they are correct
+    for (size_t i = 0; i < n; i++) {
+        printf("Body %zu: %f, %f, %f\n", i, position[3*i], position[3*i+1], position[3*i+2]);
     }
 
     // Run simulation for each time step 
@@ -112,9 +122,9 @@ int main(int argc, const char* argv[]) {
             // Save positions to row `t/output_steps` of output
             size_t output_row = t / output_steps;
             for (size_t i = 0; i < n; i++) {
-                output->data[output_row + 3*i] = /*x*/0;
-                output->data[output_row + 3*i+1] = /*y*/0;
-                output->data[output_row + 3*i+2] = /*z*/0;
+                output->data[output_row + 3*i] = position[3*i];
+                output->data[output_row + 3*i+1] = position[3*i+1];
+                output->data[output_row + 3*i+2] = position[3*i+2];
             }
         } 
     } 
@@ -123,9 +133,9 @@ int main(int argc, const char* argv[]) {
     if (num_steps % output_steps != 0) { 
         // TODO: save positions to row `num_outputs-1` of output 
         for (size_t i = 0; i < n; i++) {
-            output->data[num_outputs-1 + 3*i] = /*x*/0;
-            output->data[num_outputs-1 + 3*i+1] = /*y*/0;
-            output->data[num_outputs-1 + 3*i+2] = /*z*/0;
+            output->data[num_outputs-1 + 3*i] = position[3*i];
+            output->data[num_outputs-1 + 3*i+1] = position[3*i+1];
+            output->data[num_outputs-1 + 3*i+2] = position[3*i+2];
         }
     }  
 
@@ -140,6 +150,11 @@ int main(int argc, const char* argv[]) {
 
     // cleanup
     matrix_free(output);
+    matrix_free(input);
+    free(position);
+    free(velocity);
+    free(force);
+    free(mass);
 
     return 0;
 }
