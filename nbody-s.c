@@ -35,29 +35,13 @@
 
 #include "matrix.h"
 #include "util.h"
+#include "math_helper.h"
 
 // Gravitational Constant in N m^2 / kg^2 or m^3 / kg / s^2
 #define G 6.6743015e-11
 
 // Softening factor to reduce divide-by-near-zero effects
 #define SOFTENING 1e-9
-
-/** This function calculates the strength of the gravitational force 𝐹𝑖𝑗 
-between two bodies 𝑖 and 𝑗*/
-int calculate_force(double* force, double* r, double* mass) {
-    double dist = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
-    double mag = G * mass[0] * mass[1] / (dist*dist + SOFTENING*SOFTENING);
-    force[0] = -mag * r[0] / dist;
-    force[1] = -mag * r[1] / dist;
-    force[2] = -mag * r[2] / dist;
-    return 0;
-}
-
-int super_position (double* force, double* mass, double* position, double* velocity, double time_step) {
-
-}
-
-// function for newtons second law too
 
 
 int main(int argc, const char* argv[]) {
@@ -91,10 +75,45 @@ int main(int argc, const char* argv[]) {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // here's where we'll be writing code, copilot did a bad
-    // allocate the output matrix (maybe) or we could still copy the input matrix
-    Matrix* output = matrix_new(num_outputs*n, 3);
+    // allocate output matrix as num_outputs x 3*n 
+    Matrix* output = matrix_create_raw(num_outputs, 3*n);
     if (output == NULL) { perror("error allocating output"); return 1; }
     
+    // Save positions to row `0` of output
+    size_t irows = input->rows;
+    for (size_t i = 0; i < n; i++) {
+        output->data[3*i] = input->data[i*irows + 1];
+        output->data[3*i+1] = input->data[i*irows + 2];
+        output->data[3*i+2] = input->data[i*irows + 3];
+    }
+    
+    // Run simulation for each time step 
+    for (size_t t = 1; t < num_steps; t++) { 
+        // TODO: compute time step...
+        
+    
+        // Periodically copy the positions to the output data 
+        if (t % output_steps == 0) { 
+            // Save positions to row `t/output_steps` of output
+            size_t output_row = t / output_steps;
+            for (size_t i = 0; i < n; i++) {
+                output->data[output_row + 3*i] = /*x*/0;
+                output->data[output_row + 3*i+1] = /*y*/0;
+                output->data[output_row + 3*i+2] = /*z*/0;
+            }
+        } 
+    } 
+    
+    // Save the final set of data if necessary 
+    if (num_steps % output_steps != 0) { 
+        // TODO: save positions to row `num_outputs-1` of output 
+        for (size_t i = 0; i < n; i++) {
+            output->data[num_outputs-1 + 3*i] = /*x*/0;
+            output->data[num_outputs-1 + 3*i+1] = /*y*/0;
+            output->data[num_outputs-1 + 3*i+2] = /*z*/0;
+        }
+    }  
+
 
     // get the end and computation time
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -105,7 +124,7 @@ int main(int argc, const char* argv[]) {
     matrix_to_npy_path(argv[5], output);
 
     // cleanup
-
+    matrix_free(output);
 
     return 0;
 }
