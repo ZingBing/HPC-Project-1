@@ -87,6 +87,21 @@ int main(int argc, const char* argv[]) {
         output->data[3*i+2] = input->data[i*irows + 3];
     }
     
+    // Create variables for position and velocity of each body
+    double* position = malloc(3 * n * sizeof(double));
+    double* velocity = malloc(3 * n * sizeof(double));
+    double* force = malloc(3 * n * sizeof(double));
+    double* mass = malloc(n * sizeof(double));
+    for (size_t i = 0; i < n; i++) {
+        mass[i] = input->data[i*irows];
+        position[3*i] = input->data[i*irows + 1];
+        position[3*i+1] = input->data[i*irows + 2];
+        position[3*i+2] = input->data[i*irows + 3];
+        velocity[3*i] = input->data[i*irows + 4];
+        velocity[3*i+1] = input->data[i*irows + 5];
+        velocity[3*i+2] = input->data[i*irows + 6];
+    }
+
     // Run simulation for each time step 
     for (size_t t = 1; t < num_steps; t++) { 
         // TODO: compute time step...
