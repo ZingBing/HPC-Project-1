@@ -7,3 +7,4 @@ examples/
 #ignore all files in the scripts/ directory
 scripts/
 .venv/
+.vscode/
