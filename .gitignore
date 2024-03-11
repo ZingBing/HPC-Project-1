@@ -1,5 +1,12 @@
+# ignores files without a file extension
+*
+!*.*
+
 # ignore all .log files
 *.log
+
+#ignore all .npy files
+*.npy
 
 # ignore all files in the examples/ directory
 examples/
