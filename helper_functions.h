@@ -52,6 +52,13 @@ inline static double net_force(double* grav_forces, size_t number_of_grav_forces
     return sum;
 }
 
+/**
+* Calculate the acceleration of a body due to a force
+*/
+inline static double get_acceleration(double force, double mass) {
+    return force / mass;
+}
+
 inline static void save_position(Matrix* output, double* position, size_t output_row, size_t n) {
     for (size_t i = 0; i < n; i++) {
         output->data[output_row + 3*i] = position[3*i];
