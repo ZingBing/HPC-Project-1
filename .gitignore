@@ -15,3 +15,6 @@ examples/
 scripts/
 .venv/
 .vscode/
+
+#ignoring testing.c
+testing.c
