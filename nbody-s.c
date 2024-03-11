@@ -35,7 +35,7 @@
 
 #include "matrix.h"
 #include "util.h"
-#include "math_helper.h"
+#include "helper_functions.h"
 
 // Gravitational Constant in N m^2 / kg^2 or m^3 / kg / s^2
 #define G 6.6743015e-11
@@ -85,13 +85,8 @@ int main(int argc, const char* argv[]) {
     Matrix* output = matrix_create_raw(num_outputs, 3*n);
     if (output == NULL) { perror("error allocating output"); return 1; }
     
-    // Save positions to row `0` of output
+    // Create simple variable for number of columns in input matrix
     size_t icols = input->cols;
-    for (size_t i = 0; i < n; i++) {
-        output->data[3*i] = input->data[i*icols + 1];
-        output->data[3*i+1] = input->data[i*icols + 2];
-        output->data[3*i+2] = input->data[i*icols + 3];
-    }
     
     // Create variables for position and velocity of each body
     double* position = malloc(3 * n * sizeof(double));
@@ -107,6 +102,11 @@ int main(int argc, const char* argv[]) {
         velocity[3*i+1] = input->data[i*icols + 5];
         velocity[3*i+2] = input->data[i*icols + 6];
     }
+
+    // Save positions to row `0` of output
+    save_position(output, position, 0, n);
+
+
     // print the initial positions of the bodies to see if they are correct
     for (size_t i = 0; i < n; i++) {
         printf("Body %zu: %f, %f, %f\n", i, position[3*i], position[3*i+1], position[3*i+2]);
@@ -115,28 +115,24 @@ int main(int argc, const char* argv[]) {
     // Run simulation for each time step 
     for (size_t t = 1; t < num_steps; t++) { 
         // TODO: compute time step...
-        
+        for (size_t i = 0; i < n; i++) {
+            position[3*i] += time_step;
+            position[3*i+1] += time_step;
+            position[3*i+2] += time_step;
+        }
     
         // Periodically copy the positions to the output data 
         if (t % output_steps == 0) { 
             // Save positions to row `t/output_steps` of output
             size_t output_row = t / output_steps;
-            for (size_t i = 0; i < n; i++) {
-                output->data[output_row + 3*i] = position[3*i];
-                output->data[output_row + 3*i+1] = position[3*i+1];
-                output->data[output_row + 3*i+2] = position[3*i+2];
-            }
+            save_position(output, position, output_row, n);
         } 
     } 
     
     // Save the final set of data if necessary 
     if (num_steps % output_steps != 0) { 
         // TODO: save positions to row `num_outputs-1` of output 
-        for (size_t i = 0; i < n; i++) {
-            output->data[num_outputs-1 + 3*i] = position[3*i];
-            output->data[num_outputs-1 + 3*i+1] = position[3*i+1];
-            output->data[num_outputs-1 + 3*i+2] = position[3*i+2];
-        }
+        save_position(output, position, num_outputs-1, n);
     }  
 
 
