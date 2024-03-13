@@ -43,6 +43,10 @@
 // Softening factor to reduce divide-by-near-zero effects
 #define SOFTENING 1e-9
 
+#define body_x 0
+#define body_y 1
+#define body_z 2
+
 
 int main(int argc, const char* argv[]) {
     // parse arguments
@@ -91,7 +95,7 @@ int main(int argc, const char* argv[]) {
     // Create variables for position and velocity of each body
     double* position = malloc(3 * n * sizeof(double));
     double* velocity = malloc(3 * n * sizeof(double));
-    double* force = malloc(3 * n * sizeof(double));
+    // double* force = malloc(3 * n * sizeof(double));
     double* mass = malloc(n * sizeof(double));
     for (size_t i = 0; i < n; i++) {
         mass[i] = input->data[i*icols];
@@ -113,12 +117,40 @@ int main(int argc, const char* argv[]) {
     }
 
     // Run simulation for each time step 
+    // TODO: orbits but weird slightly off issue, condence math and hopefully floating point weirdnes is the problem
     for (size_t t = 1; t < num_steps; t++) { 
         // TODO: compute time step...
         for (size_t i = 0; i < n; i++) {
-            position[3*i] += time_step;
-            position[3*i+1] += time_step;
-            position[3*i+2] += time_step;
+            // Will currently only work for two bodies rn
+            // Matrix row: sunx, suny, sunz, earthx, earthy, earthz
+            double x_force = 0;
+            double y_force = 0;
+            double z_force = 0;
+
+            for (size_t j = 0; j < n; j++) {
+                if (i == j) {
+                    continue;
+                }
+                double force = gravitation(mass[i], mass[j], &position[i*3], &position[j*3]);
+                double accel = force / euclidean_distance(&position[i*3], &position[j*3]);
+                x_force += accel * (position[j*3+0] - position[i*3+0]);
+                y_force += accel * (position[j*3+1] - position[i*3+1]);
+                z_force += accel * (position[j*3+2] - position[i*3+2]);
+            }
+
+            double x_accel = get_acceleration(x_force, mass[i]);
+            double y_accel = get_acceleration(y_force, mass[i]);
+            double z_accel = get_acceleration(z_force, mass[i]);
+
+            // Numerically integrate acceleration to get velocity
+            velocity[3*i+0] += x_accel * time_step;
+            velocity[3*i+1] += y_accel * time_step;
+            velocity[3*i+2] += z_accel * time_step;
+
+            // Numerically integrate velocity to get position
+            position[3*i+0] += velocity[3*i+0] * time_step;
+            position[3*i+1] += velocity[3*i+1] * time_step;
+            position[3*i+2] += velocity[3*i+2] * time_step;
         }
     
         // Periodically copy the positions to the output data 
@@ -126,14 +158,14 @@ int main(int argc, const char* argv[]) {
             // Save positions to row `t/output_steps` of output
             size_t output_row = t / output_steps;
             save_position(output, position, output_row, n);
-        } 
+        }
     } 
     
     // Save the final set of data if necessary 
     if (num_steps % output_steps != 0) { 
         // TODO: save positions to row `num_outputs-1` of output 
         save_position(output, position, num_outputs-1, n);
-    }  
+    }
 
 
     // get the end and computation time
@@ -149,7 +181,7 @@ int main(int argc, const char* argv[]) {
     matrix_free(input);
     free(position);
     free(velocity);
-    free(force);
+    // free(force);
     free(mass);
 
     return 0;
