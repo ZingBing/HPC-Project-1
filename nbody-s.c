@@ -91,7 +91,7 @@ int main(int argc, const char* argv[]) {
     // Create variables for position and velocity of each body
     double* position = malloc(3 * n * sizeof(double));
     double* velocity = malloc(3 * n * sizeof(double));
-    double* force = malloc(3 * n * sizeof(double));
+    // double* force = malloc(3 * n * sizeof(double));
     double* mass = malloc(n * sizeof(double));
     for (size_t i = 0; i < n; i++) {
         mass[i] = input->data[i*icols];
@@ -116,9 +116,31 @@ int main(int argc, const char* argv[]) {
     for (size_t t = 1; t < num_steps; t++) { 
         // TODO: compute time step...
         for (size_t i = 0; i < n; i++) {
-            position[3*i] += time_step;
-            position[3*i+1] += time_step;
-            position[3*i+2] += time_step;
+            // Will currently only work for two bodies rn
+            // Matrix row: sunx, suny, sunz, earthx, earthy, earthz
+            
+            double* force = malloc(sizeof(double));
+            force[0] = gravitation(mass[0], mass[1], &position[0], &position[3]);
+            
+            double x_force = net_force(&force, 1, &position[0], &position[3]);
+            double y_force = net_force(&force, 1, &position[1], &position[4]);
+            double z_force = net_force(&force, 1, &position[2], &position[5]);
+
+            double x_accel = get_acceleration(x_force, mass[i]);
+            double y_accel = get_acceleration(y_force, mass[i]);
+            double z_accel = get_acceleration(z_force, mass[i]);
+
+            //Numerically integrate acceleration to get velocity
+            velocity[0] += x_accel * time_step;
+            velocity[1] += y_accel * time_step;
+            velocity[2] += z_accel * time_step;
+
+            //Numerically integrate velocity to get position
+            position[0] += velocity[0] * time_step;
+            position[1] += velocity[1] * time_step;
+            position[2] += velocity[2] * time_step;
+
+            free(force);
         }
     
         // Periodically copy the positions to the output data 
@@ -149,7 +171,7 @@ int main(int argc, const char* argv[]) {
     matrix_free(input);
     free(position);
     free(velocity);
-    free(force);
+    // free(force);
     free(mass);
 
     return 0;
