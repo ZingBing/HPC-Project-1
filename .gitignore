@@ -18,3 +18,9 @@ scripts/
 
 #ignoring testing.c
 testing.c
+
+# ignoring c output files that are named differently for some reason
+*.o
+
+# ignoring spotlight cache files that are in every directory according to Owen
+.DS_Store   
