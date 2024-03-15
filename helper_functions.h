@@ -20,33 +20,19 @@
 /**
 * Calculate the euclidean distance between two bodies in 3D space
 */
-inline static double euclidean_distance(double* body_1_position, double* body_2_position) {
+inline static double euclidean_distance_sans_sqrt(double* body_1_position, double* body_2_position) {
     double x = body_1_position[0] - body_2_position[0];
     double y = body_1_position[1] - body_2_position[1];
     double z = body_1_position[2] - body_2_position[2];
-    return sqrt(x * x + y * y + z * z + SOFTENING);
+    return (x * x + y * y + z * z + SOFTENING);
 }
 
 /**
 * Calculate the gravitational force between two bodies
 */
-inline static double gravitation(double mass_body_1, double mass_body_2, double* body_1_position, double* body_2_position) {
-    double top = mass_body_1 * mass_body_2;
-    double bottom = euclidean_distance(body_1_position, body_2_position);
-    return G * (top / (bottom * bottom));
+inline static double gravitation(double mass_body_1, double mass_body_2, double* body_1_position, double* body_2_position, double distance) {
+    return G * ((mass_body_1 * mass_body_2) / distance);
 }
-
-/**
-* Calculate the net force on a body due to all other bodies
-*/
-// inline static double net_force(double* grav_forces, size_t number_of_grav_forces, double* body_1_position, double* body_2_position, int dimension) {
-//     double sum = 0;
-//     for (int i = 0; i < number_of_grav_forces; i++) {
-//         sum += grav_forces[i] * ((body_2_position[dimension] - body_1_position[dimension]) / euclidean_distance(body_1_position, body_2_position));
-//     }
-
-//     return sum;
-// }
 
 /**
 * Calculate the acceleration of a body due to a force
