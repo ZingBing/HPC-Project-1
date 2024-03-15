@@ -75,10 +75,10 @@ int main(int argc, const char* argv[]) {
     //   n            number of bodies to simulate
 
     //print input matrix to know initial body positions
-    printf("Initial Body Positions:\n");
-    for (size_t i = 0; i < n; i++) {
-        printf("Body %zu: %f, %f, %f\n", i, input->data[i*input->cols + 1], input->data[i*input->cols + 2], input->data[i*input->cols + 3]);
-    }
+    // printf("Initial Body Positions:\n");
+    // for (size_t i = 0; i < n; i++) {
+    //     printf("Body %zu: %f, %f, %f\n", i, input->data[i*input->cols + 1], input->data[i*input->cols + 2], input->data[i*input->cols + 3]);
+    // }
 
     // start the clock
     struct timespec start, end;
@@ -112,17 +112,15 @@ int main(int argc, const char* argv[]) {
 
 
     // print the initial positions of the bodies to see if they are correct
-    for (size_t i = 0; i < n; i++) {
-        printf("Body %zu: %f, %f, %f\n", i, position[3*i], position[3*i+1], position[3*i+2]);
-    }
+    // for (size_t i = 0; i < n; i++) {
+    //     printf("Body %zu: %f, %f, %f\n", i, position[3*i], position[3*i+1], position[3*i+2]);
+    // }
 
     // Run simulation for each time step 
     // TODO: orbits but weird slightly off issue, condence math and hopefully floating point weirdnes is the problem
     for (size_t t = 1; t < num_steps; t++) { 
-        // TODO: compute time step...
+        // compute time step...
         for (size_t i = 0; i < n; i++) {
-            // Will currently only work for two bodies rn
-            // Matrix row: sunx, suny, sunz, earthx, earthy, earthz
             double x_force = 0;
             double y_force = 0;
             double z_force = 0;
@@ -131,8 +129,11 @@ int main(int argc, const char* argv[]) {
                 if (i == j) {
                     continue;
                 }
-                double force = gravitation(mass[i], mass[j], &position[i*3], &position[j*3]);
-                double accel = force / euclidean_distance(&position[i*3], &position[j*3]);
+                double distance = euclidean_distance_sans_sqrt(&position[i*3], &position[j*3]);
+                double force = gravitation(mass[i], mass[j], &position[i*3], &position[j*3], distance);
+
+                double accel = force / sqrt(distance);
+                
                 x_force += accel * (position[j*3+0] - position[i*3+0]);
                 y_force += accel * (position[j*3+1] - position[i*3+1]);
                 z_force += accel * (position[j*3+2] - position[i*3+2]);
