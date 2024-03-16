@@ -24,7 +24,7 @@
  * 
  * See the PDF for implementation details and other requirements.
  * 
- * AUTHORS:
+ * AUTHORS: Zachery Bingaman, Seth Coleman
  */
 
 #include <stdbool.h>
@@ -35,6 +35,7 @@
 
 #include "matrix.h"
 #include "util.h"
+#include "helper_functions.h"
 
 // Gravitational Constant in N m^2 / kg^2 or m^3 / kg / s^2
 #define G 6.6743015e-11
@@ -73,6 +74,89 @@ int main(int argc, const char* argv[]) {
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
+// here's where we'll be writing code, copilot did a bad
+    // allocate output matrix as num_outputs x 3*n 
+    Matrix* output = matrix_create_raw(num_outputs, 3*n);
+    if (output == NULL) { perror("error allocating output"); return 1; }
+    
+    // Create simple variable for number of columns in input matrix
+    size_t icols = input->cols;
+    
+    // Create variables for position and velocity of each body
+    double* position = malloc(3 * n * sizeof(double));
+    double* velocity = malloc(3 * n * sizeof(double));
+    // double* force = malloc(3 * n * sizeof(double));
+    double* mass = malloc(n * sizeof(double));
+    for (size_t i = 0; i < n; i++) {
+        mass[i] = input->data[i*icols];
+        position[3*i] = input->data[i*icols + 1];
+        position[3*i+1] = input->data[i*icols + 2];
+        position[3*i+2] = input->data[i*icols + 3];
+        velocity[3*i] = input->data[i*icols + 4];
+        velocity[3*i+1] = input->data[i*icols + 5];
+        velocity[3*i+2] = input->data[i*icols + 6];
+    }
+
+    // Save positions to row `0` of output
+    save_position(output, position, 0, n);
+
+
+    // print the initial positions of the bodies to see if they are correct
+    // for (size_t i = 0; i < n; i++) {
+    //     printf("Body %zu: %f, %f, %f\n", i, position[3*i], position[3*i+1], position[3*i+2]);
+    // }
+
+    // Run simulation for each time step 
+    for (size_t t = 1; t < num_steps; t++) { 
+        // compute time step...
+        for (size_t i = 0; i < n; i++) {
+            double x_force = 0;
+            double y_force = 0;
+            double z_force = 0;
+
+            for (size_t j = 0; j < n; j++) {
+                if (i == j) {
+                    continue;
+                }
+                double distance = euclidean_distance_sans_sqrt(&position[i*3], &position[j*3]);
+                double force = gravitation(mass[i], mass[j], &position[i*3], &position[j*3], distance);
+
+                double accel = force / sqrt(distance);
+                
+                x_force += accel * (position[j*3+0] - position[i*3+0]);
+                y_force += accel * (position[j*3+1] - position[i*3+1]);
+                z_force += accel * (position[j*3+2] - position[i*3+2]);
+            }
+
+            double x_accel = get_acceleration(x_force, mass[i]);
+            double y_accel = get_acceleration(y_force, mass[i]);
+            double z_accel = get_acceleration(z_force, mass[i]);
+
+            // Numerically integrate acceleration to get velocity
+            velocity[3*i+0] += x_accel * time_step;
+            velocity[3*i+1] += y_accel * time_step;
+            velocity[3*i+2] += z_accel * time_step;
+
+            // Numerically integrate velocity to get position
+            position[3*i+0] += velocity[3*i+0] * time_step;
+            position[3*i+1] += velocity[3*i+1] * time_step;
+            position[3*i+2] += velocity[3*i+2] * time_step;
+        }
+    
+        // Periodically copy the positions to the output data 
+        if (t % output_steps == 0) { 
+            // Save positions to row `t/output_steps` of output
+            size_t output_row = t / output_steps;
+            save_position(output, position, output_row, n);
+        }
+    } 
+    
+    // Save the final set of data if necessary 
+    if (num_steps % output_steps != 0) { 
+        // TODO: save positions to row `num_outputs-1` of output 
+        save_position(output, position, num_outputs-1, n);
+    }
+
 
     // get the end and computation time
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -80,10 +164,15 @@ int main(int argc, const char* argv[]) {
     printf("%f secs\n", time);
 
     // save results
-    //matrix_to_npy_path(argv[5], output);
+    matrix_to_npy_path(argv[5], output);
 
     // cleanup
-
+    matrix_free(output);
+    matrix_free(input);
+    free(position);
+    free(velocity);
+    // free(force);
+    free(mass);
 
     return 0;
 }

@@ -43,10 +43,6 @@
 // Softening factor to reduce divide-by-near-zero effects
 #define SOFTENING 1e-9
 
-#define body_x 0
-#define body_y 1
-#define body_z 2
-
 
 int main(int argc, const char* argv[]) {
     // parse arguments
@@ -117,7 +113,6 @@ int main(int argc, const char* argv[]) {
     // }
 
     // Run simulation for each time step 
-    // TODO: orbits but weird slightly off issue, condence math and hopefully floating point weirdnes is the problem
     for (size_t t = 1; t < num_steps; t++) { 
         // compute time step...
         for (size_t i = 0; i < n; i++) {
@@ -182,7 +177,6 @@ int main(int argc, const char* argv[]) {
     matrix_free(input);
     free(position);
     free(velocity);
-    // free(force);
     free(mass);
 
     return 0;
