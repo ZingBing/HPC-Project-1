@@ -115,7 +115,7 @@ int main(int argc, const char* argv[]) {
             double z_force = 0;
 
             for (size_t j = 0; j < n; j++) {
-                if (i == j) {
+                if (j >= i) {
                     continue;
                 }
                 double distance = euclidean_distance_sans_sqrt(&position[i*3], &position[j*3]);
