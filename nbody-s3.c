@@ -74,7 +74,6 @@ int main(int argc, const char* argv[]) {
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-// here's where we'll be writing code, copilot did a bad
     // allocate output matrix as num_outputs x 3*n 
     Matrix* output = matrix_create_raw(num_outputs, 3*n);
     if (output == NULL) { perror("error allocating output"); return 1; }
@@ -85,7 +84,6 @@ int main(int argc, const char* argv[]) {
     // Create variables for position and velocity of each body
     double* position = malloc(3 * n * sizeof(double));
     double* velocity = malloc(3 * n * sizeof(double));
-    // double* force = malloc(3 * n * sizeof(double));
     double* mass = malloc(n * sizeof(double));
     for (size_t i = 0; i < n; i++) {
         mass[i] = input->data[i*icols];
@@ -100,20 +98,20 @@ int main(int argc, const char* argv[]) {
     // Save positions to row `0` of output
     save_position(output, position, 0, n);
 
-
-    // print the initial positions of the bodies to see if they are correct
-    // for (size_t i = 0; i < n; i++) {
-    //     printf("Body %zu: %f, %f, %f\n", i, position[3*i], position[3*i+1], position[3*i+2]);
-    // }
+    // Creates arrays for net forces on each body
+    double* fx = malloc(n * sizeof(double));
+    double* fy = malloc(n * sizeof(double));
+    double* fz = malloc(n * sizeof(double));
 
     // Run simulation for each time step 
     for (size_t t = 1; t < num_steps; t++) { 
+        // Clear forces
+        memset(fx, 0, n * sizeof(double));
+        memset(fy, 0, n * sizeof(double));
+        memset(fz, 0, n * sizeof(double));
+
         // compute time step...
         for (size_t i = 0; i < n; i++) {
-            double x_force = 0;
-            double y_force = 0;
-            double z_force = 0;
-
             for (size_t j = 0; j < n; j++) {
                 if (j >= i) {
                     continue;
@@ -123,14 +121,20 @@ int main(int argc, const char* argv[]) {
 
                 double accel = force / sqrt(distance);
                 
-                x_force += accel * (position[j*3+0] - position[i*3+0]);
-                y_force += accel * (position[j*3+1] - position[i*3+1]);
-                z_force += accel * (position[j*3+2] - position[i*3+2]);
-            }
+                fx[i] += accel * (position[j*3+0] - position[i*3+0]);
+                fy[i] += accel * (position[j*3+1] - position[i*3+1]);
+                fz[i] += accel * (position[j*3+2] - position[i*3+2]);
 
-            double x_accel = get_acceleration(x_force, mass[i]);
-            double y_accel = get_acceleration(y_force, mass[i]);
-            double z_accel = get_acceleration(z_force, mass[i]);
+                fx[j] -= accel * (position[j*3+0] - position[i*3+0]);
+                fy[j] -= accel * (position[j*3+1] - position[i*3+1]);
+                fz[j] -= accel * (position[j*3+2] - position[i*3+2]);
+            }
+        }
+
+        for (size_t i = 0; i < n; i++) {
+            double x_accel = get_acceleration(fx[i], mass[i]);
+            double y_accel = get_acceleration(fy[i], mass[i]);
+            double z_accel = get_acceleration(fz[i], mass[i]);
 
             // Numerically integrate acceleration to get velocity
             velocity[3*i+0] += x_accel * time_step;
