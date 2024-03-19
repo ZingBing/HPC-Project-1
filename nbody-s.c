@@ -182,7 +182,6 @@ int main(int argc, const char* argv[]) {
     matrix_free(input);
     free(position);
     free(velocity);
-    // free(force);
     free(mass);
 
     return 0;
