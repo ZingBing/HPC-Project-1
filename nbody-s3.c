@@ -175,8 +175,10 @@ int main(int argc, const char* argv[]) {
     matrix_free(input);
     free(position);
     free(velocity);
-    // free(force);
     free(mass);
+    free(fx);
+    free(fy);
+    free(fz);
 
     return 0;
 }
