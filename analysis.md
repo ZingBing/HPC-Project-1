@@ -7,7 +7,7 @@
 - Overall much faster
 - Close at smaller array sizes but gap gets larger
 - Everything used 64 threads, it appeared to run more efficiently than 128 but we didn't have time to optimize threads past that ;(
-- Percent parallel, IDK
+- Percent parallel: 79%
 - Cross over at about 100 +- 25
 
 
@@ -15,9 +15,9 @@
 
 
 - About the same speed up comparatively to the na誰ve approach, just a bit faster
-- 64 threads for the same reason
-- Percent Parallel, IDK
-- Parallel was slower at 100random, crosses over before 200random
+- 64 threads for the same reason as the na誰ve approach
+- Percent Parallel, -0.02% (???)
+- Parallel was slower at random100, crosses over before random200
 
 
 ### Compare your na誰ve program to your 3rd law serial program. For what sizes is the na誰ve program faster and when is the 3rd-law program faster? What is the crossover point?
